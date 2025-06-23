@@ -1,0 +1,30 @@
+{
+	"name": "social-company",
+	"private": true,
+	"scripts": {
+		"build": "turbo run build",
+		"dev": "turbo run dev",
+		"lint": "turbo run lint",
+		"format": "bunx @biomejs/biome format --write ./",
+		"check-types": "turbo run check-types",
+		"auth:migrate": "bunx @better-auth/cli migrate"
+	},
+	"devDependencies": {
+		"turbo": "^2.5.4",
+		"typescript": "5.8.2"
+	},
+	"engines": {
+		"node": ">=20"
+	},
+	"packageManager": "bun@1.2.6",
+	"workspaces": [
+		"apps/odkryj/*",
+		"apps/istota/*",
+		"apps/sotsial/*",
+		"apps/zroby/*",
+		"packages/*"
+	],
+	"dependencies": {
+		"@biomejs/biome": "^2.0.0-beta.6"
+	}
+}

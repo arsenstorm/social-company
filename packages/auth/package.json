@@ -1,0 +1,35 @@
+{
+	"name": "@social/auth",
+	"version": "0.0.0",
+	"private": true,
+	"exports": {
+		"./client": "./src/client.ts",
+		"./server": "./src/server.tsx",
+		"./provider": "./src/provider.tsx",
+		"./authorise": "./src/authorise.ts",
+		"./checkpoint": "./src/checkpoint.tsx",
+		"./components/*": "./src/components/*.tsx",
+		"./captcha": "./src/captcha/provider.tsx"
+	},
+	"scripts": {
+		"check-types": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@social/typescript-config": "*",
+		"@turbo/gen": "^2.5.0",
+		"@types/node": "^22.15.3",
+		"@types/react": "19.1.0",
+		"@types/react-dom": "19.1.1",
+		"eslint": "^9.29.0",
+		"typescript": "5.8.2"
+	},
+	"dependencies": {
+		"@types/pg": "^8.15.4",
+		"better-auth": "^1.2.10",
+		"dotenv": "^16.5.0",
+		"next": "^15.3.4",
+		"pg": "^8.16.2",
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0"
+	}
+}

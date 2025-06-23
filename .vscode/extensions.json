@@ -1,0 +1,11 @@
+{
+	"recommendations": [
+		"denoland.vscode-deno",
+		"ms-python.python",
+		"ms-python.vscode-pylance",
+		"ms-python.black-formatter",
+		"ms-python.flake8",
+		"ms-python.pylint",
+		"njpwerner.autodocstring"
+	]
+}
