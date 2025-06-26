@@ -7,3 +7,5 @@ Zroby is an AI assistant for social media that combines the power of [Odkryj](..
 ## License
 
 This project is licensed under the AGPL-3.0-only license. See the [LICENSE](LICENSE) file for details.
+
+<sub>Copyright © 2025 Arsen Shkrumelyak. All rights reserved.</sub>
