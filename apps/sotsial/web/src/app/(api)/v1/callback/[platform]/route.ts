@@ -1,25 +1,24 @@
-// Sotsial
 import { getSotsial } from "@/config/sotsial";
+import { getCredentials } from "@/utils/credentials/get";
+import { createSupaClient } from "@/utils/supabase/supa";
+import { cookies } from "next/headers";
 import { decrypt, encrypt } from "sotsial/utils";
 
-// Next
-import { type NextRequest, NextResponse } from "next/server";
-import { createSupaClient } from "@/utils/supabase/supa";
-import { getCredentials } from "@/utils/credentials/get";
-
 export async function GET(
-	request: NextRequest,
+	request: Request,
 	{ params }: { params: Promise<{ platform: string }> },
 ) {
 	const { platform } = await params;
+	const url = new URL(request.url);
 
-	const token = request.cookies.get("sotsial")?.value ?? undefined;
+	const token = (await cookies()).get("sotsial")?.value ?? undefined;
+
 	const [grantId, csrfToken = "", redirect = ""] = token?.split("|") ?? [];
 
-	const code = request.nextUrl.searchParams.get("code") ?? undefined;
+	const code = url.searchParams.get("code") ?? undefined;
 
 	if (!code) {
-		return NextResponse.json({ error: "Missing code" }, { status: 400 });
+		return Response.json({ error: "Missing code" }, { status: 400 });
 	}
 
 	const supa = createSupaClient();
@@ -31,11 +30,11 @@ export async function GET(
 		.maybeSingle();
 
 	if (grantError) {
-		return NextResponse.json({ error: grantError.message }, { status: 500 });
+		return Response.json({ error: grantError.message }, { status: 500 });
 	}
 
 	if (!grantData) {
-		return NextResponse.json(
+		return Response.json(
 			{ error: "Forbidden - Invalid Session" },
 			{ status: 403 },
 		);
@@ -43,7 +42,7 @@ export async function GET(
 
 	// check if the grant has expired
 	if (grantData.expiry && new Date(grantData.expiry) < new Date()) {
-		return NextResponse.json(
+		return Response.json(
 			{ error: "Forbidden - Grant expired" },
 			{ status: 403 },
 		);
@@ -54,7 +53,7 @@ export async function GET(
 	});
 
 	if (decryptedCsrfToken !== csrfToken) {
-		return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
+		return Response.json({ error: "Invalid CSRF token" }, { status: 403 });
 	}
 
 	let credential: {
@@ -70,7 +69,7 @@ export async function GET(
 		});
 
 		if (credentialData.length > 0) {
-			credential = credentialData[0];
+			credential = credentialData[0] ?? null;
 		}
 	}
 
@@ -86,7 +85,7 @@ export async function GET(
 	const provider = sotsial.providers.find((p) => p === platform);
 
 	if (!provider) {
-		return NextResponse.json({ error: "Provider not found" }, { status: 404 });
+		return Response.json({ error: "Provider not found" }, { status: 404 });
 	}
 
 	const { data, error } = await sotsial.exchange(provider, {
@@ -149,11 +148,11 @@ export async function GET(
 		console.error(updateError);
 	}
 
-	let response: NextResponse;
+	let response: Response;
 
 	if (redirect === "close" || redirect.trim() === "") {
 		// close the popup
-		response = new NextResponse(
+		response = new Response(
 			`<!DOCTYPE html>
 			<html>
 				<head>
@@ -182,10 +181,10 @@ export async function GET(
 	} else {
 		const url = new URL(redirect ?? "/", request.url);
 
-		response = NextResponse.redirect(url.toString());
+		response = Response.redirect(url.toString());
 	}
 
-	response.cookies.delete("sotsial");
+	response.headers.set("Set-Cookie", "sotsial=; Max-Age=0; Path=/");
 
 	return response;
 }

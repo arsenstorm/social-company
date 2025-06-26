@@ -1,27 +1,22 @@
-// Next
-
-// Auth
 import { getSotsial } from "@/config/sotsial";
 import { getAccounts } from "@/utils/accounts/get-accounts";
 import { createCdnUrl } from "@/utils/cdn-url";
-import { authorise } from "@social/auth/authorise";
-import { type NextRequest, NextResponse } from "next/server";
-// Utils
 import { getCredentials } from "@/utils/credentials/get";
+import { authorise } from "@social/auth/authorise";
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
 	const {
 		post,
 		credentials: credentialIds = [],
 		targets = [],
-	} = await request.json();
+	} = await request.json().catch(() => ({}));
 
 	// Verify the API key or Session
 	// We don't need to check the type here because both are accepted.
 	const { valid, userId } = await authorise(request);
 
 	if (!valid || !userId) {
-		return NextResponse.json(
+		return Response.json(
 			{
 				data: null,
 				error: { message: "Unauthorized" },
@@ -31,12 +26,13 @@ export async function POST(request: NextRequest) {
 	}
 
 	if (targets.length === 0) {
-		return NextResponse.json(
+		return Response.json(
 			{
 				data: null,
 				error: {
 					message: "No targets provided",
-					hint: "Who are you trying to publish to? Check out the docs at https://sotsial.com/docs/publishing#targets",
+					hint:
+						"Who are you trying to publish to? Check out the docs at https://sotsial.com/docs/publishing#targets",
 				},
 			},
 			{ status: 400 },
@@ -81,12 +77,13 @@ export async function POST(request: NextRequest) {
 		});
 
 		if (credentialsData.length !== credentialIds.length) {
-			return NextResponse.json(
+			return Response.json(
 				{
 					data: null,
 					error: {
 						message: "Invalid credentials",
-						hint: "Some of the credentials you provided are invalid. Please check that you have added the correct credentials for the platforms you're trying to publish to.",
+						hint:
+							"Some of the credentials you provided are invalid. Please check that you have added the correct credentials for the platforms you're trying to publish to.",
 					},
 				},
 				{ status: 400 },
@@ -100,13 +97,14 @@ export async function POST(request: NextRequest) {
 		);
 
 		if (duplicatePlatforms.length > 0) {
-			return NextResponse.json(
+			return Response.json(
 				{
 					data: null,
 					error: {
 						message:
 							"You've provided multiple credentials for the same platform. You can only provide one credential per platform.",
-						hint: "See the docs for more information: https://sotsial.com/docs/credentials",
+						hint:
+							"See the docs for more information: https://sotsial.com/docs/credentials",
 					},
 				},
 				{ status: 400 },
@@ -126,7 +124,7 @@ export async function POST(request: NextRequest) {
 
 	if (accountsError) {
 		console.error(accountsError);
-		return NextResponse.json(
+		return Response.json(
 			{
 				data: null,
 				error: {
@@ -139,13 +137,14 @@ export async function POST(request: NextRequest) {
 	}
 
 	if (accounts.length === 0) {
-		return NextResponse.json(
+		return Response.json(
 			{
 				data: null,
 				error: {
 					message:
 						"We couldn't find any accounts for the platforms you're trying to publish to.",
-					hint: "Check that you have added accounts for the platforms you're trying to publish to.",
+					hint:
+						"Check that you have added accounts for the platforms you're trying to publish to.",
 				},
 			},
 			{ status: 404 },
@@ -156,7 +155,7 @@ export async function POST(request: NextRequest) {
 		(acc: Record<string, any[]>, account) => {
 			// Group accounts by platform
 			acc[account.platform] = acc[account.platform] ?? [];
-			acc[account.platform].push(account);
+			acc[account.platform]?.push(account);
 			return acc;
 		},
 		{} as Record<string, any[]>,
@@ -192,5 +191,5 @@ export async function POST(request: NextRequest) {
 		},
 	});
 
-	return NextResponse.json({ results });
+	return Response.json({ results });
 }

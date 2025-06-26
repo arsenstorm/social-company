@@ -32,6 +32,7 @@ export function AccountSelection({
 				?.logo ?? null;
 
 		return (
+			// biome-ignore lint/a11y/noStaticElementInteractions: it's fine
 			<div
 				key={connection.id}
 				className={clsx(

@@ -1,9 +1,5 @@
-// Auth
-import { authorise } from "@social/auth/authorise";
-// Next
-import { type NextRequest, NextResponse } from "next/server";
-// Supabase
 import { createSupaClient } from "@/utils/supabase/supa";
+import { authorise } from "@social/auth/authorise";
 
 /**
  * Get the verification status of a grant
@@ -12,17 +8,19 @@ import { createSupaClient } from "@/utils/supabase/supa";
  *
  * @returns The response
  */
-const getVerificationStatus = async (request: NextRequest) => {
+const getVerificationStatus = async (request: Request) => {
 	const { valid, userId } = await authorise(request);
 
 	if (!valid || !userId) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		return Response.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	const grantId = request.nextUrl.searchParams.get("id");
+	const url = new URL(request.url);
+
+	const grantId = url.searchParams.get("id");
 
 	if (!grantId) {
-		return NextResponse.json(
+		return Response.json(
 			{ error: "No grant ID provided" },
 			{ status: 400 },
 		);
@@ -39,17 +37,17 @@ const getVerificationStatus = async (request: NextRequest) => {
 
 	if (error) {
 		console.error(error);
-		return NextResponse.json(
+		return Response.json(
 			{ error: "Something went wrong" },
 			{ status: 500 },
 		);
 	}
 
 	if (!data) {
-		return NextResponse.json({ error: "Invalid grant ID" }, { status: 404 });
+		return Response.json({ error: "Invalid grant ID" }, { status: 404 });
 	}
 
-	return NextResponse.json({
+	return Response.json({
 		status: data.status,
 	});
 };

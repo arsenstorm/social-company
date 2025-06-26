@@ -399,7 +399,7 @@ function InstagramPreview({
 			<div className="relative">
 				{media.length > 0 ? (
 					<div className="relative group">
-						{media[0].type === "image" ? (
+						{media[0]?.type === "image" ? (
 							<img
 								src={media[0].url}
 								alt=""
@@ -407,7 +407,7 @@ function InstagramPreview({
 							/>
 						) : (
 							<video
-								src={media[0].url}
+								src={media[0]?.url}
 								className="w-full aspect-square object-cover cursor-pointer"
 								autoPlay
 								playsInline

@@ -1,23 +1,16 @@
-// Auth
-import { authorise } from "@social/auth/authorise";
-// Next
-import { type NextRequest, NextResponse } from "next/server";
-import { encrypt, timestamp } from "sotsial/utils";
-
-// Providers
 import { getSotsial } from "@/config/sotsial";
 import { getAccounts } from "@/utils/accounts/get-accounts";
-
-// Utils
 import { getCredentials } from "@/utils/credentials/get";
-// Supabase
 import { createSupaClient } from "@/utils/supabase/supa";
+import { authorise } from "@social/auth/authorise";
+import { encrypt, timestamp } from "sotsial/utils";
 
-const deleteConnection = async (request: NextRequest) => {
+const deleteConnection = async (request: Request) => {
 	const { valid, userId } = await authorise(request);
+	const url = new URL(request.url);
 
 	if (!valid || !userId) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		return Response.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
 	const supa = createSupaClient();
@@ -26,14 +19,14 @@ const deleteConnection = async (request: NextRequest) => {
 	const { error } = await supa
 		.from("connections")
 		.delete()
-		.eq("id", request.nextUrl.searchParams.get("id"))
+		.eq("id", url.searchParams.get("id"))
 		.eq("user_id", userId);
 
 	if (error) {
-		return NextResponse.json({ error: error.message }, { status: 400 });
+		return Response.json({ error: error.message }, { status: 400 });
 	}
 
-	return NextResponse.json(
+	return Response.json(
 		{
 			data: {
 				message: "Deleted connection",
@@ -43,22 +36,24 @@ const deleteConnection = async (request: NextRequest) => {
 	);
 };
 
-const listConnections = async (request: NextRequest) => {
+const listConnections = async (request: Request) => {
 	const { valid, userId } = await authorise(request);
 
+	const url = new URL(request.url);
+
 	if (!valid || !userId) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		return Response.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
 	const options = {
-		platform: request.nextUrl.searchParams.get("platform") ?? undefined,
-		query: request.nextUrl.searchParams.get("query") ?? undefined,
-		tags: JSON.parse(request.nextUrl.searchParams.get("tags") ?? "[]"),
+		platform: url.searchParams.get("platform") ?? undefined,
+		query: url.searchParams.get("query") ?? undefined,
+		tags: JSON.parse(url.searchParams.get("tags") ?? "[]"),
 	};
 
 	const pagination = {
-		page: Number(request.nextUrl.searchParams.get("page") ?? 1),
-		limit: Number(request.nextUrl.searchParams.get("limit") ?? 10),
+		page: Number(url.searchParams.get("page") ?? 1),
+		limit: Number(url.searchParams.get("limit") ?? 10),
 	};
 
 	const supa = createSupaClient();
@@ -90,10 +85,10 @@ const listConnections = async (request: NextRequest) => {
 	);
 
 	if (error) {
-		return NextResponse.json({ error: error.message }, { status: 500 });
+		return Response.json({ error: error.message }, { status: 500 });
 	}
 
-	return NextResponse.json({ data }, { status: 200 });
+	return Response.json({ data }, { status: 200 });
 };
 
 /**
@@ -107,20 +102,22 @@ const listConnections = async (request: NextRequest) => {
  *
  * @returns The response
  */
-const createConnection = async (request: NextRequest) => {
+const createConnection = async (request: Request) => {
 	// Verify the API key or Session
 	const { valid, userId, type } = await authorise(request);
 
 	if (!valid || !userId) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		return Response.json({ error: "Unauthorized" }, { status: 401 });
 	}
+
+	const url = new URL(request.url);
 
 	const {
 		platform,
 		redirect,
 		tags: tagsParam,
 		credential: credentialParam,
-	} = Object.fromEntries(request.nextUrl.searchParams.entries());
+	} = Object.fromEntries(url.searchParams.entries());
 
 	let credential = null;
 
@@ -137,14 +134,19 @@ const createConnection = async (request: NextRequest) => {
 	// Users are only allowed to use the grant API if they have provided a credential
 	// This is to prevent abuse.
 	if (!credential && type === "api") {
-		return NextResponse.json(
+		return Response.json(
 			{
 				error:
 					"You cannot use the API to generate a grant URL for Sotsial's providers.",
-				hint: "See the docs for more information: https://sotsial.com/docs/credentials#sotsial-providers",
+				hint:
+					"See the docs for more information: https://sotsial.com/docs/credentials#sotsial-providers",
 			},
 			{ status: 400 },
 		);
+	}
+
+	if (!platform) {
+		return Response.json({ error: "Platform is required" }, { status: 400 });
 	}
 
 	const sotsial = getSotsial({
@@ -159,17 +161,17 @@ const createConnection = async (request: NextRequest) => {
 	const provider = sotsial.providers.find((p) => p === platform) ?? null;
 
 	if (!provider) {
-		return NextResponse.json({ error: "Provider not found" }, { status: 404 });
+		return Response.json({ error: "Provider not found" }, { status: 404 });
 	}
 
 	const { data, error } = await sotsial[provider].grant();
 
 	if (error) {
-		return NextResponse.json({ error: error.message }, { status: 500 });
+		return Response.json({ error: error.message }, { status: 500 });
 	}
 
 	if (!data) {
-		return NextResponse.json(
+		return Response.json(
 			{
 				error: "Failed to get redirect URL",
 			},
@@ -198,10 +200,10 @@ const createConnection = async (request: NextRequest) => {
 		.single();
 
 	if (grantError) {
-		return NextResponse.json({ error: grantError.message }, { status: 500 });
+		return Response.json({ error: grantError.message }, { status: 500 });
 	}
 
-	const response = NextResponse.json(
+	const response = Response.json(
 		{
 			url: data.url,
 			token: `${grantData.id}|${data.csrf_token}`,
@@ -211,17 +213,11 @@ const createConnection = async (request: NextRequest) => {
 		},
 	);
 
-	response.cookies.set(
-		"sotsial",
-		// Grant ID | Decrypted CSRF Token | Redirect URL (where to send user after exchange)
-		`${grantData.id}|${data.csrf_token}|${redirect ?? ""}`,
-		{
-			path: "/",
-			httpOnly: true,
-			secure: true,
-			sameSite: "lax",
-			maxAge: 60 * 60, // an hour should be enough
-		},
+	response.headers.append(
+		"Set-Cookie",
+		`sotsial=${grantData.id}|${data.csrf_token}|${
+			redirect ?? ""
+		}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
 	);
 
 	return response;
@@ -234,18 +230,22 @@ const createConnection = async (request: NextRequest) => {
  *
  * @returns The response
  */
-const updateConnection = async (request: NextRequest) => {
+const updateConnection = async (request: Request) => {
 	const { valid, userId } = await authorise(request);
 
 	if (!valid || !userId) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		return Response.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
 	const {
 		credentials: credentialIds = [],
 		targets = [],
 		tags = [],
-	} = await request.json().catch(() => ({}));
+	} = await request.json().catch(() => ({})) as {
+		credentials?: string[];
+		targets?: string[];
+		tags?: string[];
+	};
 
 	const { data: accounts, error: accountsError } = await getAccounts({
 		targets,
@@ -254,7 +254,7 @@ const updateConnection = async (request: NextRequest) => {
 	});
 
 	if (accountsError) {
-		return NextResponse.json(
+		return Response.json(
 			{ error: "Failed to get accounts" },
 			{ status: 400 },
 		);
@@ -272,13 +272,13 @@ const updateConnection = async (request: NextRequest) => {
 		.select("id");
 
 	if (error) {
-		return NextResponse.json(
+		return Response.json(
 			{ status: "error", error: error.message },
 			{ status: 500 },
 		);
 	}
 
-	return NextResponse.json(
+	return Response.json(
 		{ status: "success", updated: updated.length },
 		{ status: 200 },
 	);

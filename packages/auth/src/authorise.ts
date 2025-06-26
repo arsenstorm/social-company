@@ -1,7 +1,6 @@
 import { auth } from "@social/auth/server";
-import type { NextRequest } from "next/server";
 
-export async function authorise(request: NextRequest): Promise<{
+export async function authorise(request: Request): Promise<{
 	type: "api" | "session";
 	valid: boolean;
 	userId: string | null;

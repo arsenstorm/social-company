@@ -61,9 +61,10 @@ export function PlatformSettings({
 								let value: any = undefined;
 
 								if (field.name.includes(".")) {
-									const [parent, child] = field.name.split(".");
+									const [_parent, child] = field.name.split(".");
 									const parentObj = formState[fullKey] as Record<string, any>;
-									value = parentObj?.[child];
+									value =
+										parentObj?.[child as keyof typeof parentObj] ?? undefined;
 								} else {
 									value = formState[fullKey];
 								}

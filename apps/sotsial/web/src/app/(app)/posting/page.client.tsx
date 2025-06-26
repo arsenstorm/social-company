@@ -195,7 +195,7 @@ export function PostingForm() {
 
 	// Platform-specific form handlers
 	const handlePlatformFormChange = (
-		platform: string,
+		_platform: string,
 		field: string,
 		value: any,
 	) => {
@@ -207,7 +207,7 @@ export function PostingForm() {
 				const parentKey = parent as keyof PlatformFormState;
 				newState[parentKey] = {
 					...((newState[parentKey] as any) ?? {}),
-					[child]: value,
+					[child as keyof (typeof newState)[typeof parentKey]]: value,
 				};
 			} else {
 				const key = field as keyof PlatformFormState;
@@ -579,7 +579,7 @@ export function PostingForm() {
 													platform={platform}
 													text={postText}
 													media={mediaItems}
-													connection={connectionForPreview}
+													connection={connectionForPreview!}
 													formState={platformFormState}
 												/>
 											</TabPanel>

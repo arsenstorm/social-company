@@ -124,7 +124,7 @@ function CodePanelHeader({
 	}
 
 	return (
-		<div className="flex h-9 items-center gap-2 border-y border-b-white/7.5 border-t-transparent bg-white/2.5 bg-zinc-900 px-4 dark:border-b-white/5 dark:bg-white/1">
+		<div className="flex h-9 items-center gap-2 border-y border-b-white/7.5 border-t-transparent bg-white/2.5 px-4 dark:border-b-white/5 dark:bg-white/1">
 			{tag && (
 				<div className="dark flex">
 					<Tag variant="small">{tag}</Tag>
@@ -301,7 +301,7 @@ function useTabGroupProps(availableLanguages: Array<string>) {
 	const activeLanguage = [...availableLanguages].sort(
 		(a, z) => preferredLanguages.indexOf(z) - preferredLanguages.indexOf(a),
 	)[0];
-	const languageIndex = availableLanguages.indexOf(activeLanguage);
+	const languageIndex = availableLanguages.indexOf(activeLanguage ?? "");
 	const newSelectedIndex = languageIndex === -1 ? selectedIndex : languageIndex;
 	if (newSelectedIndex !== selectedIndex) {
 		setSelectedIndex(newSelectedIndex);
@@ -315,7 +315,7 @@ function useTabGroupProps(availableLanguages: Array<string>) {
 		selectedIndex,
 		onChange: (newSelectedIndex: number) => {
 			preventLayoutShift(() =>
-				addPreferredLanguage(availableLanguages[newSelectedIndex]),
+				addPreferredLanguage(availableLanguages[newSelectedIndex] ?? ""),
 			);
 		},
 	};

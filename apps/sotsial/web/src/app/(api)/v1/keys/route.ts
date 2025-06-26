@@ -1,16 +1,12 @@
-// Next
-
-// Better Auth
 import { authorise } from "@social/auth/authorise";
 import { auth } from "@social/auth/server";
-import { type NextRequest, NextResponse } from "next/server";
 
-const listKeys = async (request: NextRequest) => {
+const listKeys = async (request: Request) => {
 	const { valid, userId, type } = await authorise(request);
 
 	// Deny requests from API keys - This is a dashboard only API
 	if (!valid || !userId || type === "api") {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		return Response.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
 	const keys = await auth.api.listApiKeys({
@@ -19,15 +15,15 @@ const listKeys = async (request: NextRequest) => {
 		},
 	});
 
-	return NextResponse.json(keys);
+	return Response.json(keys);
 };
 
-const createKey = async (request: NextRequest) => {
+const createKey = async (request: Request) => {
 	const { valid, userId, type } = await authorise(request);
 
 	// Deny requests from API keys - This is a dashboard only API
 	if (!valid || !userId || type === "api") {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		return Response.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
 	const { name } = await request.json();
@@ -39,39 +35,41 @@ const createKey = async (request: NextRequest) => {
 		},
 	});
 
-	return NextResponse.json(key);
+	return Response.json(key);
 };
 
-const deleteKey = async (request: NextRequest) => {
+const deleteKey = async (request: Request) => {
 	const { valid, userId, type } = await authorise(request);
+
+	const url = new URL(request.url);
 
 	// Deny requests from API keys - This is a dashboard only API
 	if (!valid || !userId || type === "api") {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		return Response.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	const id = request.nextUrl.searchParams.get("id");
+	const id = url.searchParams.get("id");
 
 	if (!id) {
-		return NextResponse.json({ error: "No key ID provided" }, { status: 400 });
+		return Response.json({ error: "No key ID provided" }, { status: 400 });
 	}
 
 	try {
 		const { success } = await auth.api.deleteApiKey({
 			body: {
 				keyId: id,
-				userId,
 			},
+			headers: request.headers,
 		});
 
 		if (!success) {
-			return NextResponse.json(
+			return Response.json(
 				{ error: "Failed to delete key" },
 				{ status: 400 },
 			);
 		}
 
-		return NextResponse.json(
+		return Response.json(
 			{
 				data: {
 					message: "Key deleted",
@@ -80,7 +78,7 @@ const deleteKey = async (request: NextRequest) => {
 			{ status: 200 },
 		);
 	} catch (error) {
-		return NextResponse.json(
+		return Response.json(
 			{ error: "Failed to delete key" },
 			{ status: 500 },
 		);

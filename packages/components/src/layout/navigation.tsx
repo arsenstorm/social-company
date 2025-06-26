@@ -23,7 +23,7 @@ import {
 	SettingsIcon,
 	ShieldCheckIcon,
 	SunIcon,
-} from "@social/icons/ui/index";
+} from "@social/icons/ui";
 // UI
 import { Avatar } from "@social/ui/avatar";
 import {
@@ -53,10 +53,9 @@ import {
 	SidebarSpacer,
 } from "@social/ui/sidebar";
 import { SidebarLayout } from "@social/ui/sidebar-layout";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 // Utils
 import { useTheme } from "next-themes";
-import { useTransitionRouter } from "next-view-transitions";
 import { useCallback } from "react";
 
 export function NavigationProvider({
@@ -65,7 +64,7 @@ export function NavigationProvider({
 	readonly children: React.ReactNode;
 }) {
 	const { user } = useAuth();
-	const router = useTransitionRouter();
+	const router = useRouter();
 	const pathname = usePathname();
 	const { resolvedTheme, setTheme } = useTheme();
 

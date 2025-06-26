@@ -1,15 +1,10 @@
 "use client";
 
-// Better Auth
 import { auth } from "@social/auth/client";
-
-// Next View Transitions
-import { useTransitionRouter } from "next-view-transitions";
-// React
+import { Switch } from "@social/ui/switch";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-// UI
-import { Switch } from "./ui/switch";
 
 export function KeyStatusToggle({
 	id,
@@ -21,7 +16,7 @@ export function KeyStatusToggle({
 }) {
 	const [disabled, setDisabled] = useState(false);
 	const [status, setStatus] = useState(enabled ? "enabled" : "disabled");
-	const router = useTransitionRouter();
+	const router = useRouter();
 
 	return (
 		<Switch
